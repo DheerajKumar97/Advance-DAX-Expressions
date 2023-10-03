@@ -1,0 +1,51 @@
+Top_N_Total_FactReseller_Sales = 
+
+
+			VAR Sum_Sales =
+			
+					 SUMX(
+					
+						    FILTER(
+						        VALUES(DimProduct[ProductKey]),
+						        DimProduct[RANKX_Dim_PR] <= 'TopN'[TopN Value]
+						
+						    ),
+					
+						    CALCULATE( 
+						    	FactResellerSales[FR_Sales]
+						
+						    )
+					)
+				
+					Return
+					
+					  	IF( [RANKX_Dim_PR] <= 'TopN'[TopN Value], Sum_Sales, BLANK())
+  
+  
+  
+Top_N_CumSum_Total_FactReseller_Sales = 
+
+					VAR CurrentRank = [RANKX_Dim_PR]
+					VAR CmSum = 
+					
+							IF(
+								    ISBLANK(SUM(FactResellerSales[SalesAmount])), BLANK() ,
+									    CALCULATE(
+									        SUM(FactResellerSales[SalesAmount]),
+									        FILTER(
+									            ALLSELECTED(DimProduct[ProductKey]),  -- Assuming 'Order' is the table containing your data
+									            [RANKX_Dim_PR] <= CurrentRank
+									        )
+								    )
+							)
+					
+					VAR Result = 
+					
+							IF(
+							    [RANKX_Dim_PR] <= 'TopN'[TopN Value], CmSum, BLANK()
+							)
+					RETURN 
+					
+							IF(HASONEVALUE(DimProduct[ProductKey]), Result, BLANK())
+							
+							
